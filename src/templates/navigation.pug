@@ -1,0 +1,14 @@
+mixin li(link, menuName)
+	li.nav-item
+		a.nav-link.js-scroll-trigger(href=link)= menuName
+
+nav#mNav.navbar.navbar-expand.navbar-light.fixed-top
+	.container
+		button.navbar-toggler.navbar-toggler-right(type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation")
+			span.navbar-toggler-icon
+		#navbarResponsive.collapse.navbar-collapse
+			ul.navbar-nav.ml-auto
+					+li('#about', 'About')
+					+li('#offers', 'Our Offers')
+					+li('#gallery', 'Gallery')
+					+li('#contact', 'Contact')
