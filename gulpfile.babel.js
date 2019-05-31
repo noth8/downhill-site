@@ -151,14 +151,14 @@ function downloadGoogleFonts() {
   });
 }
 
-function copyGoogleFonts(finishTask) {
+function copyGoogleFontsToBuildDir(finishTask) {
   if (GOOGLE_FONTS_ENABLED) {
     checkDirExist(paths.googleFonts.fontsDir, noDir => {
       const copyToDest = () => {
         gulp
           .src(paths.googleFonts.woff)
           .pipe(newer(paths.build.fontsDir))
-          .pipe(printFileName("CopyGoogleFonts"))
+          .pipe(printFileName("copyGoogleFontsToBuildDir"))
           .pipe(gulp.dest(paths.build.fontsDir))
           .on("end", finishTask);
       };
@@ -437,7 +437,7 @@ function initBrowserSync(finishTask) {
 const build = gulp.series(
   cleanBuildDir,
   convertPugToHtml,
-  copyGoogleFonts,
+  copyGoogleFontsToBuildDir,
   copyBootstrapSource,
   mergeStyles,
   injectStylesToHtml,
