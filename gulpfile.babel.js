@@ -58,7 +58,7 @@ const paths = {
     stylus: "./src/styles/*.styl",
     webpackEntry: "./src/js/entry.js",
     jsDir: "./src/js/",
-    imgDir: "./src/img/*.*",
+    images: "./src/img/**/*.*",
   },
   watch: {
     pug: "./src/templates/**/*.pug",
@@ -346,7 +346,7 @@ function injectBundleToHtml() {
 
 function copyImages() {
   return gulp
-    .src(paths.src.imgDir, { since: gulp.lastRun(copyImages) })
+    .src(paths.src.images, { since: gulp.lastRun(copyImages) })
     .pipe(errorHandler("CopyImages"))
     .pipe(gulpIf(isDevelopment, newer(paths.build.imgDir)))
     .pipe(
