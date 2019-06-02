@@ -98,6 +98,22 @@ const paths = {
       jsDir: "./src/vendor/magnific-popup/src/js/",
     },
   },
+  fontAweSome: {
+    src: {
+      root: "./node_modules/@fortawesome/fontawesome-free/",
+      scss: "./node_modules/@fortawesome/fontawesome-free/scss/**/*.*",
+      fonts: "./node_modules/@fortawesome/fontawesome-free/webfonts/**/*.*",
+    },
+    customSrc: {
+      root: "./src/vendor/@fortawesome/fontawesome-free/",
+      scss: [
+        "./src/vendor/@fortawesome/fontawesome-free/scss/solid.scss",
+        "./src/vendor/@fortawesome/fontawesome-free/scss/fontawesome.scss",
+      ],
+      fonts:
+        "./src/vendor/@fortawesome/fontawesome-free/webfonts/**/fa-solid-900.woff",
+    },
+  },
   nodeModules: {
     root: "./node_modules/",
   },
@@ -108,6 +124,8 @@ const BOOTSTRAP_ENABLED = true;
 const BOOTSTRAP_CUSTOM_SOURCE = true;
 const MAGNIFIC_POPUP_ENABLED = true;
 const MAGNIFIC_CUSTOM_SOURCE = true;
+const FONT_AWESOME_ENABLED = true;
+const FONT_AWESOME_CUSTOM_SOURCE = true;
 const AUTOPREFIXER_BROWSER_LIST = "last 2 versions";
 const IMAGE_ENCODER_GUETZLI = false;
 const IMAGE_COMPRESSION_RATE = 84;
@@ -248,6 +266,56 @@ const convertMagnificPopupToCss = () => {
   return sourceStream.pipe(cached("styles")).pipe(sass());
 };
 
+function copyFontAwesomeSource() {
+  return new Promise(resolve => {
+    checkDirExist(paths.fontAweSome.customSrc.root, noDir => {
+      if (noDir) {
+        return gulp
+          .src([paths.fontAweSome.src.scss, paths.fontAweSome.src.fonts], {
+            base: paths.nodeModules.root,
+          })
+          .pipe(errorHandler("copyFontAwesomeSource"))
+          .pipe(printFileName("copyFontAwesomeSource"))
+          .pipe(gulp.dest(paths.src.vendorDir))
+          .on("end", resolve);
+      }
+      resolve();
+    });
+  });
+}
+
+function copyFontAwesomeToBuildDir(finishTask) {
+  if (FONT_AWESOME_ENABLED && FONT_AWESOME_CUSTOM_SOURCE) {
+    copyFontAwesomeSource().then(() => {
+      gulp
+        .src(paths.fontAweSome.customSrc.fonts)
+        .pipe(newer(paths.build.fontsDir))
+        .pipe(printFileName("copyFontAwesomeToBuildDir"))
+        .pipe(gulp.dest(paths.build.fontsDir))
+        .on("end", finishTask);
+    });
+  } else if (FONT_AWESOME_ENABLED && !FONT_AWESOME_CUSTOM_SOURCE) {
+    return gulp
+      .src(paths.fontAweSome.src.fonts, {
+        base: paths.fontAweSome.src.root,
+      })
+      .pipe(newer(paths.build.root))
+      .pipe(printFileName("copyFontAwesomeToBuildDir"))
+      .pipe(gulp.dest(paths.build.root));
+  } else finishTask();
+}
+
+const convertFontAwesomeScssToCss = () => {
+  let sourceStream;
+  if (FONT_AWESOME_CUSTOM_SOURCE) {
+    sourceStream = gulp.src(paths.fontAweSome.customSrc.scss);
+  } else {
+    sourceStream = gulp.src(paths.fontAweSome.src.scss);
+  }
+
+  return sourceStream.pipe(cached("styles")).pipe(sass());
+};
+
 function mergeStyles() {
   const merged = merge();
 
@@ -255,6 +323,7 @@ function mergeStyles() {
   if (BOOTSTRAP_ENABLED) merged.add(convertBootstrapScssToCss());
   merged.add(convertStylusFilesToCss());
   if (MAGNIFIC_POPUP_ENABLED) merged.add(convertMagnificPopupToCss());
+  if (FONT_AWESOME_ENABLED) merged.add(convertFontAwesomeScssToCss());
 
   return merged
     .pipe(errorHandler("MergeStyles"))
@@ -483,6 +552,7 @@ const build = gulp.series(
   copyGoogleFontsToBuildDir,
   copyBootstrapSource,
   copyMagnificPopupSource,
+  copyFontAwesomeToBuildDir,
   mergeStyles,
   injectStylesToHtml,
   copyImages,
