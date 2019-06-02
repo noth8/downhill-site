@@ -130,7 +130,8 @@ const AUTOPREFIXER_BROWSER_LIST = "last 2 versions";
 const IMAGE_ENCODER_GUETZLI = false;
 const IMAGE_COMPRESSION_RATE = 84;
 
-const isDevelopment = !process.env.NODE_ENV || process.env.NODE_ENV === "development";
+const isDevelopment =
+  !process.env.NODE_ENV || process.env.NODE_ENV === "development";
 
 const isProduction = !isDevelopment;
 
@@ -138,13 +139,14 @@ const checkDirExist = (location, callback) => {
   fs.access(location, fs.constants.F_OK, callback);
 };
 
-const errorHandler = taskName => plumber({
-  errorHandler: error => notifier.notify({
-    title: `[${taskName}] Error : `,
-    message: error.message,
-  }),
-});
-
+const errorHandler = taskName =>
+  plumber({
+    errorHandler: error =>
+      notifier.notify({
+        title: `[${taskName}] Error : `,
+        message: error.message,
+      }),
+  });
 
 const printFileName = taskname => debug({ title: `[${taskname}] Add : ` });
 
@@ -204,7 +206,8 @@ function copyGoogleFontsToBuildDir(finishTask) {
   } else finishTask();
 }
 
-const getGoogleFontsCss = () => gulp.src(paths.googleFonts.css).pipe(cached("styles"));
+const getGoogleFontsCss = () =>
+  gulp.src(paths.googleFonts.css).pipe(cached("styles"));
 
 function copyBootstrapSource(finishTask) {
   if (BOOTSTRAP_ENABLED && BOOTSTRAP_CUSTOM_SOURCE) {
@@ -223,20 +226,22 @@ function copyBootstrapSource(finishTask) {
   } else finishTask();
 }
 
-const convertBootstrapScssToCss = () => gulp
-  .src(paths.bootstrap.scssEntryFile)
-  .pipe(
-    gulpIf(
-      BOOTSTRAP_CUSTOM_SOURCE,
-      sass({ includePaths: paths.bootstrap.customSrc.scssDir }),
-      sass({ includePaths: paths.bootstrap.src.scssDir }),
-    ),
-  );
+const convertBootstrapScssToCss = () =>
+  gulp
+    .src(paths.bootstrap.scssEntryFile)
+    .pipe(
+      gulpIf(
+        BOOTSTRAP_CUSTOM_SOURCE,
+        sass({ includePaths: paths.bootstrap.customSrc.scssDir }),
+        sass({ includePaths: paths.bootstrap.src.scssDir }),
+      ),
+    );
 
-const convertStylusFilesToCss = () => gulp
-  .src(paths.src.stylus)
-  .pipe(cached("styles"))
-  .pipe(stylus());
+const convertStylusFilesToCss = () =>
+  gulp
+    .src(paths.src.stylus)
+    .pipe(cached("styles"))
+    .pipe(stylus());
 
 function copyMagnificPopupSource(finishTask) {
   if (MAGNIFIC_POPUP_ENABLED && MAGNIFIC_CUSTOM_SOURCE) {
@@ -517,20 +522,11 @@ function watchForChanges(finishTask) {
   if (isDevelopment) {
     gulp.watch(
       paths.watch.pug,
-      gulp.series(
-        convertPugToHtml,
-        injectStylesToHtml,
-        injectBundleToHtml,
-      ),
+      gulp.series(convertPugToHtml, injectStylesToHtml, injectBundleToHtml),
     );
-    gulp
-      .watch(
-        paths.watch.styles,
-        mergeStyles,
-      )
-      .on("unlink", filepath => {
-        remember.forget("styles", path.resolve(filepath));
-      });
+    gulp.watch(paths.watch.styles, mergeStyles).on("unlink", filepath => {
+      remember.forget("styles", path.resolve(filepath));
+    });
     browserSync.watch(paths.watch.browserSync).on("change", browserSync.reload);
   } else finishTask();
 }
