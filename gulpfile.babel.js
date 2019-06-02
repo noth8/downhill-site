@@ -86,6 +86,18 @@ const paths = {
     },
     scssEntryFile: "./src/styles/bootstrap/bootstrap.scss",
   },
+  magnificPopup: {
+    src: {
+      scss: "./node_modules/magnific-popup/src/css/**/*.*",
+      jsDir: "./node_modules/magnific-popup/src/js/",
+      js: "node_modules/magnific-popup/src/js/**/*.*",
+    },
+    customSrc: {
+      root: "./src/vendor/magnific-popup/",
+      scss: "./src/vendor/magnific-popup/src/css/**/*.*",
+      jsDir: "./src/vendor/magnific-popup/src/js/",
+    },
+  },
   nodeModules: {
     root: "./node_modules/",
   },
@@ -94,6 +106,8 @@ const paths = {
 const GOOGLE_FONTS_ENABLED = true;
 const BOOTSTRAP_ENABLED = true;
 const BOOTSTRAP_CUSTOM_SOURCE = true;
+const MAGNIFIC_POPUP_ENABLED = true;
+const MAGNIFIC_CUSTOM_SOURCE = true;
 const AUTOPREFIXER_BROWSER_LIST = "last 2 versions";
 const IMAGE_ENCODER_GUETZLI = false;
 const IMAGE_COMPRESSION_RATE = 84;
@@ -206,12 +220,41 @@ const convertStylusFilesToCss = () => gulp
   .pipe(cached("styles"))
   .pipe(stylus());
 
+function copyMagnificPopupSource(finishTask) {
+  if (MAGNIFIC_POPUP_ENABLED && MAGNIFIC_CUSTOM_SOURCE) {
+    checkDirExist(paths.magnificPopup.customSrc.root, noDir => {
+      if (noDir) {
+        gulp
+          .src([paths.magnificPopup.src.scss, paths.magnificPopup.src.js], {
+            base: paths.nodeModules.root,
+          })
+          .pipe(errorHandler("CopymagnificPopupSource"))
+          .pipe(printFileName("CopymagnificPopupSource"))
+          .pipe(gulp.dest(paths.src.vendorDir))
+          .on("end", finishTask);
+      } else finishTask();
+    });
+  } else finishTask();
+}
+
+const convertMagnificPopupToCss = () => {
+  let sourceStream;
+  if (MAGNIFIC_CUSTOM_SOURCE) {
+    sourceStream = gulp.src(paths.magnificPopup.customSrc.scss);
+  } else {
+    sourceStream = gulp.src(paths.magnificPopup.src.scss);
+  }
+
+  return sourceStream.pipe(cached("styles")).pipe(sass());
+};
+
 function mergeStyles() {
   const merged = merge();
 
   if (GOOGLE_FONTS_ENABLED) merged.add(getGoogleFontsCss());
   if (BOOTSTRAP_ENABLED) merged.add(convertBootstrapScssToCss());
   merged.add(convertStylusFilesToCss());
+  if (MAGNIFIC_POPUP_ENABLED) merged.add(convertMagnificPopupToCss());
 
   return merged
     .pipe(errorHandler("MergeStyles"))
@@ -439,6 +482,7 @@ const build = gulp.series(
   convertPugToHtml,
   copyGoogleFontsToBuildDir,
   copyBootstrapSource,
+  copyMagnificPopupSource,
   mergeStyles,
   injectStylesToHtml,
   copyImages,
